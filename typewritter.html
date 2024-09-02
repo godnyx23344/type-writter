@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Typewriter</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f5f5f5; /* Light grey background */
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .virtual-computer {
+            width: 600px;
+            height: 500px; /* Increased height to accommodate keyboard and instructions */
+            background-color: #d9d9d9; /* Light grey background for the computer */
+            border: 2px solid #8c8c8c; /* Darker grey border */
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Shadow for vintage effect */
+        }
+
+        .screen {
+            flex-grow: 1;
+            background-color: #f0f0f0; /* Light screen background */
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #8c8c8c; /* Border for screen */
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: flex-start;
+            padding: 5px;
+            background-color: #bfbfbf; /* Grey background for the toolbar */
+        }
+
+        .toolbar-item {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+            cursor: pointer;
+        }
+
+        .close {
+            background-color: #ff5f57; /* Red for close */
+        }
+
+        .minimize {
+            background-color: #ffbd2e; /* Yellow for minimize */
+        }
+
+        .maximize {
+            background-color: #28c940; /* Green for maximize */
+        }
+
+        .terminal {
+            flex-grow: 1;
+            padding: 10px;
+            color: #000; /* Black text color */
+            overflow-y: auto;
+            font-size: 18px; /* Larger font size for typewriter effect */
+            white-space: pre-wrap;
+        }
+
+        #terminal-content {
+            outline: none;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .power-button {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: #b5a642; /* Typewriter key color */
+            border-radius: 50%;
+            top: 10px;
+            right: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 20px;
+        }
+
+        .instructions {
+            position: absolute;
+            bottom: 70px; /* Adjusted to be above the keyboard */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #e3e3e3; /* Slightly darker grey for instructions */
+            color: #000; /* Black text color */
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+            font-size: 16px;
+            text-align: center;
+            opacity: 0;
+            animation: fadeIn 2s forwards;
+            display: none; /* Initially hidden */
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .keyboard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            background-color: #bfbfbf; /* Grey for keyboard */
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            position: absolute;
+            bottom: -200px; /* Positioned just above the save button */
+            width: 100%;
+        }
+
+        .key {
+            width: 40px;
+            height: 40px;
+            background-color: #8c8c8c; /* Darker grey for keys */
+            border-radius: 5px;
+            margin: 5px;
+            text-align: center;
+            line-height: 40px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            border: 2px solid #666; /* Darker border for keys */
+        }
+
+        .key.active {
+            background-color: #f4a460; /* Highlight color similar to typewriter keys */
+        }
+
+        .save-button, .open-button {
+            position: absolute;
+            width: 100px;
+            height: 40px;
+            background-color: #4caf50; /* Green for save */
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            bottom: 10px; /* Positioned above the keyboard */
+            font-size: 16px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .save-button {
+            left: calc(50% - 110px); /* Positioned to the left of the center */
+        }
+
+        .open-button {
+            left: calc(50% + 10px); /* Positioned to the right of the save button */
+            background-color: #2196F3; /* Blue for open */
+        }
+        .animated-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24px;
+    font-weight: bold;
+    color: #000;
+    white-space: nowrap;
+    overflow: hidden;
+    border-right: .15em solid #000; /* Cursor effect */
+    animation: typing 4s steps(30, end), blink .75s step-end infinite;
+}
+
+@keyframes typing {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+@keyframes blink {
+    from, to { border-color: transparent; }
+    50% { border-color: #000; }
+}
+
+.hidden {
+    display: none;
+}
+
+        
+    </style>
+</head>
+<body>
+    <div class="virtual-computer">
+        <div class="screen" id="screen">
+            <div class="toolbar">
+                <div class="toolbar-item close"></div>
+                <div class="toolbar-item minimize"></div>
+                <div class="toolbar-item maximize"></div>
+            </div>
+            <div class="terminal">
+                <pre id="terminal-content" contenteditable="true"></pre>
+            </div>
+        </div>
+        <div class="power-button" id="power-button">⏻</div>
+        <div class="instructions" id="instructions">Click the power button to start!</div>
+        <button class="save-button" id="save-button">Save</button>
+        <button class="open-button" id="open-button">Open</button>
+        <div class="keyboard" id="keyboard">
+            <!-- Generate keys for the keyboard -->
+            <div class="key">Q</div>
+            <div class="key">W</div>
+            <div class="key">E</div>
+            <div class="key">R</div>
+            <div class="key">T</div>
+            <div class="key">Y</div>
+            <div class="key">U</div>
+            <div class="key">I</div>
+            <div class="key">O</div>
+            <div class="key">P</div>
+            <div class="key">A</div>
+            <div class="key">S</div>
+            <div class="key">D</div>
+            <div class="key">F</div>
+            <div class="key">G</div>
+            <div class="key">H</div>
+            <div class="key">J</div>
+            <div class="key">K</div>
+            <div class="key">L</div>
+            <div class="key">Z</div>
+            <div class="key">X</div>
+            <div class="key">C</div>
+            <div class="key">V</div>
+            <div class="key">B</div>
+            <div class="key">N</div>
+            <div class="key">M</div>
+        </div>
+        <div class="animated-text" id="animated-text">Modern Typewriter</div>
+        <input type="file" id="file-input" style="display: none;" />
+    </div>
+    <script>
+        const terminalContent = document.getElementById('terminal-content');
+        const screen = document.getElementById('screen');
+        const powerButton = document.getElementById('power-button');
+        const instructions = document.getElementById('instructions');
+        const keyboardKeys = document.querySelectorAll('.keyboard .key');
+        const saveButton = document.getElementById('save-button');
+        const openButton = document.getElementById('open-button');
+        const fileInput = document.getElementById('file-input');
+        const animatedText = document.getElementById('animated-text');
+        let isOn = false;
+        
+
+        // Add typing functionality
+        document.addEventListener('keydown', function(e) {
+            if (isOn) {  // Only allow typing if the computer is on
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Prevent the default action of adding a new line
+                    terminalContent.textContent += '\n'; // Add a new line manually
+                    placeCaretAtEnd(terminalContent); // Ensure the caret stays at the end
+                } else {
+                    // Highlight the key that was pressed
+                    highlightKey(e.key.toUpperCase());
+                }
+            }
+        });
+
+        // Function to keep the caret at the end of the content
+        function placeCaretAtEnd(el) {
+            el.focus();
+            if (typeof window.getSelection != "undefined"
+                && typeof document.createRange != "undefined") {
+                var range = document.createRange();
+                range.selectNodeContents(el);
+                range.collapse(false);
+                var sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+        }
+
+        // Toggle power on/off
+        powerButton.addEventListener('click', function() {
+            if (isOn) {
+                powerOff();
+            } else {
+                powerOn();
+            }
+            isOn = !isOn;
+        });
+
+        function powerOn() {
+            instructions.style.display = 'none';  // Hide instructions
+            animatedText.classList.add('hidden'); //Hide animated text
+            screen.style.backgroundColor = '#f0f0f0'; // Set the screen background to light
+            terminalContent.textContent = ''; // Clear the terminal content
+            terminalContent.focus(); // Focus on the terminal
+        }
+
+        function powerOff() {
+            instructions.style.display = 'block';  // Show instructions
+            animatedText.classList.remove('hidden'); // Show animated text
+            screen.style.backgroundColor = '#d9d9d9'; // Set the screen background to grey
+            terminalContent.textContent = ''; // Clear the terminal content
+        }
+
+        // Show instructions on page load
+        window.onload = function() {
+            instructions.style.display = 'block'; // Show instructions on page load
+        }
+
+        // Highlight key function
+        function highlightKey(key) {
+            keyboardKeys.forEach(k => {
+                if (k.textContent === key) {
+                    k.classList.add('active');
+                    setTimeout(() => k.classList.remove('active'), 150); // Remove highlight after 150ms
+                }
+            });
+        }
+
+        // Save button functionality
+        saveButton.addEventListener('click', function() {
+            const text = terminalContent.textContent;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'output.txt'; // Filename for the saved file
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        // Open button functionality
+        openButton.addEventListener('click', function() {
+            fileInput.click(); // Trigger file input click
+        });
+
+        fileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    terminalContent.textContent = e.target.result; // Load file content into terminal
+                }
+                reader.readAsText(file);
+            }
+        });
+    </script>
+</body>
+</html>
